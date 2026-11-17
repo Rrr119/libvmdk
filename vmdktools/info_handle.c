@@ -279,6 +279,110 @@ int info_handle_open_input(
 	return( 1 );
 }
 
+/* Opens a snapshot chain
+ * Returns 1 if successful, 0 if no snapshot was found or -1 on error
+ */
+int info_handle_open_snapshot_chain(
+     info_handle_t *info_handle,
+     system_character_t * const * filenames,
+     int number_of_filenames,
+     uint64_t timestamp,
+     int use_timestamp,
+     libcerror_error_t **error )
+{
+	static char *function = "info_handle_open_snapshot_chain";
+	int result            = 0;
+
+	if( info_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid info handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( filenames == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid filenames.",
+		 function );
+
+		return( -1 );
+	}
+	if( number_of_filenames <= 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: number of filenames value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	if( use_timestamp != 0 )
+	{
+		result = libvmdk_handle_open_snapshot_chain_at_timestamp_wide(
+		          info_handle->input_handle,
+		          filenames[ 0 ],
+		          timestamp,
+		          LIBVMDK_OPEN_READ,
+		          error );
+	}
+	else
+	{
+		result = libvmdk_handle_open_snapshot_chain_wide(
+		          info_handle->input_handle,
+		          filenames[ 0 ],
+		          LIBVMDK_OPEN_READ,
+		          error );
+	}
+#else
+	if( use_timestamp != 0 )
+	{
+		result = libvmdk_handle_open_snapshot_chain_at_timestamp(
+		          info_handle->input_handle,
+		          filenames[ 0 ],
+		          timestamp,
+		          LIBVMDK_OPEN_READ,
+		          error );
+	}
+	else
+	{
+		result = libvmdk_handle_open_snapshot_chain(
+		          info_handle->input_handle,
+		          filenames[ 0 ],
+		          LIBVMDK_OPEN_READ,
+		          error );
+	}
+#endif
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_OPEN_FAILED,
+		 "%s: unable to open snapshot chain.",
+		 function );
+
+		return( -1 );
+	}
+	else if( result == 0 )
+	{
+		return( 0 );
+	}
+	info_handle->snapshot_chain_enabled = 1;
+
+	return( 1 );
+}
+
 /* Closes the info handle
  * Returns the 0 if successful or -1 on error
  */
@@ -324,6 +428,285 @@ int info_handle_close(
 		return( -1 );
 	}
 	return( 0 );
+}
+
+/* Prints the snapshot chain information to a stream
+ * Returns 1 if successful or -1 on error
+ */
+int info_handle_snapshot_chain_fprint(
+     info_handle_t *info_handle,
+     libcerror_error_t **error )
+{
+	system_character_t *value_string = NULL;
+	static char *function            = "info_handle_snapshot_chain_fprint";
+	uint64_t media_size              = 0;
+	uint64_t timestamp               = 0;
+	size_t value_string_size         = 0;
+	uint32_t content_identifier      = 0;
+	uint32_t parent_content_identifier = 0;
+	int disk_type                    = 0;
+	int result                       = 0;
+	int selected_snapshot_index      = 0;
+	int snapshot_index               = 0;
+	int number_of_snapshots          = 0;
+
+	if( info_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid info handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( info_handle->snapshot_chain_enabled == 0 )
+	{
+		return( 1 );
+	}
+	result = libvmdk_handle_get_number_of_snapshots(
+	          info_handle->input_handle,
+	          &number_of_snapshots,
+	          error );
+
+	if( result != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve number of snapshots.",
+		 function );
+
+		return( -1 );
+	}
+	if( libvmdk_handle_get_selected_snapshot_index(
+	     info_handle->input_handle,
+	     &selected_snapshot_index,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve selected snapshot index.",
+		 function );
+
+		return( -1 );
+	}
+	fprintf(
+	 info_handle->notify_stream,
+	 "\nSnapshot chain:\n" );
+
+	for( snapshot_index = 0;
+	     snapshot_index < number_of_snapshots;
+	     snapshot_index++ )
+	{
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libvmdk_handle_get_utf16_snapshot_filename_size(
+		          info_handle->input_handle,
+		          snapshot_index,
+		          &value_string_size,
+		          error );
+#else
+		result = libvmdk_handle_get_utf8_snapshot_filename_size(
+		          info_handle->input_handle,
+		          snapshot_index,
+		          &value_string_size,
+		          error );
+#endif
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d filename size.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		value_string = system_string_allocate(
+		                value_string_size );
+
+		if( value_string == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create snapshot filename.",
+			 function );
+
+			goto on_error;
+		}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libvmdk_handle_get_utf16_snapshot_filename(
+		          info_handle->input_handle,
+		          snapshot_index,
+		          (uint16_t *) value_string,
+		          value_string_size,
+		          error );
+#else
+		result = libvmdk_handle_get_utf8_snapshot_filename(
+		          info_handle->input_handle,
+		          snapshot_index,
+		          (uint8_t *) value_string,
+		          value_string_size,
+		          error );
+#endif
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d filename.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		if( libvmdk_handle_get_snapshot_timestamp(
+		     info_handle->input_handle,
+		     snapshot_index,
+		     &timestamp,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d timestamp.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		if( libvmdk_handle_get_snapshot_content_identifier(
+		     info_handle->input_handle,
+		     snapshot_index,
+		     &content_identifier,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d content identifier.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		if( libvmdk_handle_get_snapshot_disk_type(
+		     info_handle->input_handle,
+		     snapshot_index,
+		     &disk_type,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d disk type.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		if( libvmdk_handle_get_snapshot_media_size(
+		     info_handle->input_handle,
+		     snapshot_index,
+		     &media_size,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d media size.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		fprintf(
+		 info_handle->notify_stream,
+		 "\tSnapshot %d%s\n",
+		 snapshot_index,
+		 snapshot_index == selected_snapshot_index ? " (selected)" : "" );
+
+		fprintf(
+		 info_handle->notify_stream,
+		 "\t\tFilename\t\t: %" PRIs_SYSTEM "\n",
+		 value_string );
+
+		fprintf(
+		 info_handle->notify_stream,
+		 "\t\tTimestamp\t\t: %" PRIu64 "\n",
+		 timestamp );
+
+		fprintf(
+		 info_handle->notify_stream,
+		 "\t\tContent identifier\t: 0x%08" PRIx32 "\n",
+		 content_identifier );
+
+		fprintf(
+		 info_handle->notify_stream,
+		 "\t\tDisk type\t\t: %d\n",
+		 disk_type );
+
+		fprintf(
+		 info_handle->notify_stream,
+		 "\t\tMedia size\t\t: %" PRIu64 " bytes\n",
+		 media_size );
+
+		memory_free(
+		 value_string );
+
+		value_string = NULL;
+
+		result = libvmdk_handle_get_snapshot_parent_content_identifier(
+		          info_handle->input_handle,
+		          snapshot_index,
+		          &parent_content_identifier,
+		          error );
+
+		if( result == -1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve snapshot: %d parent content identifier.",
+			 function,
+			 snapshot_index );
+
+			goto on_error;
+		}
+		else if( result != 0 )
+		{
+			fprintf(
+			 info_handle->notify_stream,
+			 "\t\tParent content identifier\t: 0x%08" PRIx32 "\n",
+			 parent_content_identifier );
+		}
+		fprintf(
+		 info_handle->notify_stream,
+		 "\n" );
+	}
+	return( 1 );
+
+on_error:
+	if( value_string != NULL )
+	{
+		memory_free(
+		 value_string );
+	}
+	return( -1 );
 }
 
 /* Prints the file information to a stream
@@ -919,6 +1302,19 @@ int info_handle_file_fprint(
 		fprintf(
 		 info_handle->notify_stream,
 		 "\n" );
+	}
+	if( info_handle_snapshot_chain_fprint(
+	     info_handle,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+		 "%s: unable to print snapshot chain information.",
+		 function );
+
+		goto on_error;
 	}
 	return( 1 );
 

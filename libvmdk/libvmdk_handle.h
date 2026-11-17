@@ -35,6 +35,7 @@
 #include "libvmdk_libcthreads.h"
 #include "libvmdk_libfcache.h"
 #include "libvmdk_libfdata.h"
+#include "libvmdk_snapshot.h"
 
 #if defined( __cplusplus )
 extern "C" {
@@ -96,6 +97,18 @@ struct libvmdk_internal_handle
 	 */
 	libvmdk_handle_t *parent_handle;
 
+	/* Value to indicate if the parent handle was created inside the library
+	 */
+	uint8_t parent_handle_created_in_library;
+
+	/* The snapshots array
+	 */
+	libcdata_array_t *snapshots_array;
+
+	/* The selected snapshot index
+	 */
+	int selected_snapshot_index;
+
 #if defined( HAVE_LIBVMDK_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
 	 */
@@ -142,6 +155,64 @@ int libvmdk_handle_open_file_io_handle(
      libbfio_handle_t *file_io_handle,
      int access_flags,
      libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_open_snapshot_chain(
+     libvmdk_handle_t *handle,
+     const char *filename,
+     int access_flags,
+     libcerror_error_t **error );
+
+#if defined( HAVE_WIDE_CHARACTER_TYPE )
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_open_snapshot_chain_wide(
+     libvmdk_handle_t *handle,
+     const wchar_t *filename,
+     int access_flags,
+     libcerror_error_t **error );
+
+#endif /* defined( HAVE_WIDE_CHARACTER_TYPE ) */
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_open_snapshot_chain_at_index(
+     libvmdk_handle_t *handle,
+     const char *filename,
+     int snapshot_index,
+     int access_flags,
+     libcerror_error_t **error );
+
+#if defined( HAVE_WIDE_CHARACTER_TYPE )
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_open_snapshot_chain_at_index_wide(
+     libvmdk_handle_t *handle,
+     const wchar_t *filename,
+     int snapshot_index,
+     int access_flags,
+     libcerror_error_t **error );
+
+#endif /* defined( HAVE_WIDE_CHARACTER_TYPE ) */
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_open_snapshot_chain_at_timestamp(
+     libvmdk_handle_t *handle,
+     const char *filename,
+     uint64_t timestamp,
+     int access_flags,
+     libcerror_error_t **error );
+
+#if defined( HAVE_WIDE_CHARACTER_TYPE )
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_open_snapshot_chain_at_timestamp_wide(
+     libvmdk_handle_t *handle,
+     const wchar_t *filename,
+     uint64_t timestamp,
+     int access_flags,
+     libcerror_error_t **error );
+
+#endif /* defined( HAVE_WIDE_CHARACTER_TYPE ) */
 
 LIBVMDK_EXTERN \
 int libvmdk_handle_open_extent_data_files(
@@ -324,6 +395,83 @@ int libvmdk_handle_get_extent_descriptor(
      libvmdk_handle_t *handle,
      int extent_index,
      libvmdk_extent_descriptor_t **extent_descriptor,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_number_of_snapshots(
+     libvmdk_handle_t *handle,
+     int *number_of_snapshots,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_selected_snapshot_index(
+     libvmdk_handle_t *handle,
+     int *snapshot_index,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_snapshot_timestamp(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     uint64_t *timestamp,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_snapshot_content_identifier(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     uint32_t *content_identifier,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_snapshot_parent_content_identifier(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     uint32_t *parent_content_identifier,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_snapshot_disk_type(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     int *disk_type,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_snapshot_media_size(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     size64_t *media_size,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_utf8_snapshot_filename_size(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     size_t *utf8_string_size,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_utf8_snapshot_filename(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_utf16_snapshot_filename_size(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     size_t *utf16_string_size,
+     libcerror_error_t **error );
+
+LIBVMDK_EXTERN \
+int libvmdk_handle_get_utf16_snapshot_filename(
+     libvmdk_handle_t *handle,
+     int snapshot_index,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

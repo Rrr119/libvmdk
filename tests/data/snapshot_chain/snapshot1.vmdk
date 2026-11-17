@@ -1,0 +1,15 @@
+# Disk DescriptorFile
+version=1
+encoding="UTF-8"
+CID=22222222
+parentCID=11111111
+parentFileNameHint="base.vmdk"
+createType="twoGbMaxExtentSparse"
+
+# Extent description
+RW 128 SPARSE "snapshot1-s001.vmdk"
+
+# The Disk Data Base
+#DDB
+
+ddb.virtualHWVersion = "4"

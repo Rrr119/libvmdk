@@ -1,0 +1,18 @@
+{
+  "uid": "23206",
+  "harness": "Codex CLI",
+  "snapshotUrl": "https://github.com/Rrr119/libvmdk/commit/9b637ef920d36723e27e05428ab9ecb3530aa9b2",
+  "harnessVersion": "codex-cli 0.167.2",
+  "operatingSystem": "Ubuntu 26.04.1 LTS",
+  "operatingSystemCell": [
+    "MacOS/Linux"
+  ],
+  "outputDirectory": "/home/dev/feedback/uid23206",
+  "wslDistro": "Ubuntu-26.04",
+  "B": {
+    "success": false,
+    "canceled": true,
+    "error": "任务已取消",
+    "side": "B"
+  }
+}

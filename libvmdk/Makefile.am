@@ -55,6 +55,7 @@ libvmdk_la_SOURCES = \
 	libvmdk_libfvalue.h \
 	libvmdk_libuna.h \
 	libvmdk_notify.c libvmdk_notify.h \
+	libvmdk_snapshot.c libvmdk_snapshot.h \
 	libvmdk_support.c libvmdk_support.h \
 	libvmdk_system_string.c libvmdk_system_string.h \
 	libvmdk_types.h \
@@ -79,7 +80,7 @@ libvmdk_la_LIBADD = \
 	@ZLIB_LIBADD@ \
 	@PTHREAD_LIBADD@
 
-libvmdk_la_LDFLAGS = -no-undefined -version-info 1:0:0
+libvmdk_la_LDFLAGS = -no-undefined -version-info 2:0:1
 
 EXTRA_DIST = \
 	libvmdk_definitions.h.in \

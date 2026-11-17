@@ -14,8 +14,22 @@ Read supported extent file formats:
 Supported VMDK format features:
 
 * delta links
+* automatic snapshot chain discovery through parentCID and parentFileNameHint
+* reading a snapshot chain at a descriptor or Unix timestamp
 * grain compression (as of version 20131209)
 * data markers (as of version 20140416)
+
+Snapshot chains:
+
+* `libvmdk_handle_open_snapshot_chain()` opens a snapshot and all of its parents
+* `libvmdk_handle_open_snapshot_chain_at_index()` opens an older point in the chain
+* `libvmdk_handle_open_snapshot_chain_at_timestamp()` selects the newest snapshot
+  whose descriptor modification time is at or before the supplied Unix timestamp
+* snapshot index 0 is the oldest (base) image; the last index is the active image
+* both sparse and stream optimized extents are supported, including parent fallback
+
+The `vmdkinfo -s` option lists the snapshot chain. Use `vmdkinfo -t <timestamp>`
+to inspect the snapshot selected at a historical Unix timestamp.
 
 VMDK format features not supported at the moment:
 

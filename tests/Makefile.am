@@ -359,6 +359,12 @@ check-local: $(check_AUTOTESTS)
 		$(AM_TESTS_ENVIRONMENT) $(SHELL) "./$$test_suite" $(TESTSUITEFLAGS) || fail=1; \
 		echo ""; \
 	done; \
+	if command -v python3 >/dev/null 2>&1 && \
+	   test -f "$(abs_top_builddir)/libvmdk/.libs/libvmdk.so"; then \
+		LIBVMDK_LIBRARY="$(abs_top_builddir)/libvmdk/.libs/libvmdk.so" \
+		PYTHONPATH="$(abs_srcdir)" \
+		python3 "$(abs_srcdir)/test_snapshot_chain.py" || fail=1; \
+	fi; \
 	exit $$fail
 
 clean-local:
@@ -409,8 +415,16 @@ test_tools: \
 
 EXTRA_DIST = \
 	$(check_SCRIPTS) \
+	data/snapshot_chain/README \
+	data/snapshot_chain/base-s001.vmdk \
+	data/snapshot_chain/base.vmdk \
+	data/snapshot_chain/snapshot1-s001.vmdk \
+	data/snapshot_chain/snapshot1.vmdk \
+	data/snapshot_chain/snapshot2.vmdk \
 	generate_test_inputs.sh \
+	generate_snapshot_test_images.py \
 	package.m4 \
+	test_snapshot_chain.py \
 	test_library.at \
 	test_macros.at \
 	test_manpages.at \

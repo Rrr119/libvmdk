@@ -1,0 +1,14 @@
+# Disk DescriptorFile
+version=1
+encoding="UTF-8"
+CID=11111111
+parentCID=ffffffff
+createType="twoGbMaxExtentSparse"
+
+# Extent description
+RW 128 SPARSE "base-s001.vmdk"
+
+# The Disk Data Base
+#DDB
+
+ddb.virtualHWVersion = "4"

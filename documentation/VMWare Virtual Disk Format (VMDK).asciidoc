@@ -133,6 +133,47 @@ delta image can chain to another delta image.
 
 [yellow-background]*Name <name>-delta.vmdk*
 
+=== Snapshot chains
+
+Snapshot chains are represented by delta links. Each descriptor identifies the
+content identifier of its parent with `parentCID` and optionally provides the
+parent descriptor path with `parentFileNameHint`. A chain starts at a base
+descriptor with `parentCID=ffffffff` and ends at the active or most recent
+descriptor. Relative parent paths are resolved relative to the descriptor that
+contains the hint.
+
+libvmdk exposes the complete chain through:
+
+* `libvmdk_handle_open_snapshot_chain()` to open the active snapshot and all parents
+* `libvmdk_handle_open_snapshot_chain_at_index()` to open a specific chain index
+* `libvmdk_handle_open_snapshot_chain_at_timestamp()` to open a historical point
+* `libvmdk_handle_get_number_of_snapshots()` and the `*_snapshot_*` metadata
+  functions to enumerate the chain
+
+Snapshot index 0 is the base image and the highest index is the active image.
+For time-based selection, libvmdk uses the modification time of each descriptor
+because the VMDK descriptor format does not define a snapshot creation timestamp.
+The newest descriptor with a modification time at or before the requested Unix
+timestamp is selected. If multiple descriptors have the same timestamp, the
+highest chain index wins.
+
+Reads from a selected snapshot first use its extents. Sparse grains that are not
+present in the selected image fall back to its parent, recursively down to the
+base image. This applies to both uncompressed sparse extents and compressed
+`streamOptimized` extents.
+
+For example, to read an image as it existed at a Unix timestamp:
+
+....
+if( libvmdk_handle_open_snapshot_chain_at_timestamp(
+     handle, "snapshot2.vmdk", timestamp, LIBVMDK_OPEN_READ, &error ) != 1 )
+{
+	/* Handle error */
+}
+read_count = libvmdk_handle_read_buffer_at_offset(
+              handle, buffer, buffer_size, media_offset, &error );
+....
+
 == [[descriptor_file]]The descriptor file
 
 The descriptor file is a case-insensitive text based file that contains the

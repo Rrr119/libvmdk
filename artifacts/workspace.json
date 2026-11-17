@@ -1,0 +1,17 @@
+{
+  "root": "/home/dev/feedback/uid23206",
+  "B": "/home/dev/feedback/uid23206",
+  "sha": "9b637ef920d36723e27e05428ab9ecb3530aa9b2",
+  "wslDistro": "Ubuntu-26.04",
+  "source": {
+    "owner": "libyal",
+    "repo": "libvmdk",
+    "sha": "9b637ef920d36723e27e05428ab9ecb3530aa9b2"
+  },
+  "fork": {
+    "owner": "Rrr119",
+    "repo": "libvmdk",
+    "cloneUrl": "https://github.com/Rrr119/libvmdk.git"
+  },
+  "at": "2026-11-17T02:29:05.818Z"
+}

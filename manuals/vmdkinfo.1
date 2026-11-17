@@ -6,7 +6,8 @@
 .Nd determines information about a VMware Virtual Disk (VMDK) file
 .Sh SYNOPSIS
 .Nm vmdkinfo
-.Op Fl hvV
+.Op Fl hsvV
+.Op Fl t Ar timestamp
 .Ar source
 .Sh DESCRIPTION
 .Nm vmdkinfo
@@ -26,6 +27,11 @@ The options are as follows:
 .Bl -tag -width Ds
 .It Fl h
 shows this help
+.It Fl s
+shows the snapshot chain of the source image
+.It Fl t Ar timestamp
+selects the newest snapshot with a descriptor modification time at or before
+the specified Unix timestamp and shows the snapshot chain
 .It Fl v
 verbose output to stderr
 .It Fl V
@@ -46,6 +52,8 @@ VMware Virtual Disk (VMDK) information:
 	Content identifier:		0x505dcf0a
 	Parent content identifier:	0xffffffff
 .sp
+# vmdkinfo -s snapshot.vmdk
+# vmdkinfo -t 1700000000 snapshot.vmdk
 .Ed
 .Sh DIAGNOSTICS
 Errors, verbose and debug output are printed to stderr when verbose output \

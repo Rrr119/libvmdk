@@ -24,6 +24,10 @@
 #include <system_string.h>
 #include <types.h>
 
+#if defined( HAVE_ERRNO_H ) || defined( WINAPI )
+#include <errno.h>
+#endif
+
 #if defined( HAVE_FCNTL_H ) || defined( WINAPI )
 #include <fcntl.h>
 #endif
@@ -110,6 +114,8 @@ int main( int argc, char * const argv[] )
 
 	vmdktools_option_t options[ ] = {
 		{ 'h', NULL, "shows this help" },
+		{ 's', NULL, "shows the snapshot chain" },
+		{ 't', "timestamp", "selects the snapshot at or before a Unix timestamp" },
 		{ 'v', NULL, "verbose output to stderr" },
 		{ 'V', NULL, "print version" },
 		{ 0, "source", "the source descriptor file" },
@@ -120,8 +126,13 @@ int main( int argc, char * const argv[] )
 	system_character_t * const *source_filenames = NULL;
 	char *program                                = "vmdkinfo";
 	system_integer_t option                      = 0;
+	system_character_t *timestamp_end            = NULL;
+	uint64_t snapshot_timestamp                  = 0;
 	int number_of_options                        = (int) ( sizeof( options ) / sizeof( vmdktools_option_t ) );
 	int number_of_source_filenames               = 0;
+	int result                                   = 0;
+	int snapshot_chain                           = 0;
+	int use_timestamp                            = 0;
 	int verbose                                  = 0;
 
 #if defined( __MINGW32__ ) && defined( HAVE_MINGW_BINMODE )
@@ -204,6 +215,42 @@ int main( int argc, char * const argv[] )
 
 				return( EXIT_SUCCESS );
 
+			case (system_integer_t) 's':
+				snapshot_chain = 1;
+
+				break;
+
+			case (system_integer_t) 't':
+				errno          = 0;
+				timestamp_end  = NULL;
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+				snapshot_timestamp = (uint64_t) wcstoull(
+				                                 optarg,
+				                                 &timestamp_end,
+				                                 10 );
+#else
+				snapshot_timestamp = (uint64_t) strtoull(
+				                                 optarg,
+				                                 &timestamp_end,
+				                                 10 );
+#endif
+				if( ( errno != 0 )
+				 || ( timestamp_end == optarg )
+				 || ( timestamp_end == NULL )
+				 || ( *timestamp_end != (system_character_t) 0 ) )
+				{
+					fprintf(
+					 stderr,
+					 "Invalid snapshot timestamp: %" PRIs_SYSTEM "\n",
+					 optarg );
+
+					return( EXIT_FAILURE );
+				}
+				snapshot_chain = 1;
+				use_timestamp  = 1;
+
+				break;
+
 			case (system_integer_t) 'v':
 				verbose = 1;
 
@@ -252,11 +299,25 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-	if( info_handle_open_input(
-	     vmdkinfo_info_handle,
-	     source_filenames,
-	     number_of_source_filenames,
-	     &error ) != 1 )
+	if( snapshot_chain != 0 )
+	{
+		result = info_handle_open_snapshot_chain(
+		          vmdkinfo_info_handle,
+		          source_filenames,
+		          number_of_source_filenames,
+		          snapshot_timestamp,
+		          use_timestamp,
+		          &error );
+	}
+	else
+	{
+		result = info_handle_open_input(
+		          vmdkinfo_info_handle,
+		          source_filenames,
+		          number_of_source_filenames,
+		          &error );
+	}
+	if( result != 1 )
 	{
 		fprintf(
 		 stderr,

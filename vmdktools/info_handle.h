@@ -45,6 +45,10 @@ struct info_handle
 	/* The notification output stream
 	 */
 	FILE *notify_stream;
+
+	/* Value to indicate a snapshot chain was opened
+	 */
+	uint8_t snapshot_chain_enabled;
 };
 
 int info_handle_initialize(
@@ -63,6 +67,14 @@ int info_handle_open_input(
      info_handle_t *info_handle,
      system_character_t * const * filenames,
      int number_of_filenames,
+     libcerror_error_t **error );
+
+int info_handle_open_snapshot_chain(
+     info_handle_t *info_handle,
+     system_character_t * const * filenames,
+     int number_of_filenames,
+     uint64_t timestamp,
+     int use_timestamp,
      libcerror_error_t **error );
 
 int info_handle_close(
